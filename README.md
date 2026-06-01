@@ -1,36 +1,91 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# next-api-routes
 
-## Getting Started
+API REST construida con Next.js App Router, Prisma y PostgreSQL. Gestiona autores y sus libros.
 
-First, run the development server:
+## Stack
+
+- **Next.js** (App Router) — rutas de API con Route Handlers
+- **Prisma** — ORM para acceso a base de datos
+- **PostgreSQL** — base de datos relacional
+
+## Modelos
+
+**Author** — `id`, `name`, `email` (único), `nationality`, `birthYear`, `bio`
+
+**Book** — `id`, `title`, `description`, `isbn` (único), `publishedYear`, `genre`, `pages`, `authorId`
+
+Un autor puede tener muchos libros. Al eliminar un autor se eliminan sus libros en cascada.
+
+## Configuración
+
+1. Instalar dependencias:
+
+```bash
+npm install
+```
+
+2. Crear el archivo `.env` con las variables de entorno:
+
+```env
+DATABASE_URL="postgresql://user:password@host:port/database"
+DIRECT_URL="postgresql://user:password@host:port/database"
+```
+
+3. Aplicar las migraciones de Prisma:
+
+```bash
+npx prisma migrate dev
+```
+
+4. Iniciar el servidor de desarrollo:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+La API estará disponible en `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Endpoints
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Autores
 
-## Learn More
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/api/authors` | Lista todos los autores (incluye sus libros) |
+| POST | `/api/authors` | Crea un autor (`name` y `email` requeridos) |
+| GET | `/api/authors/[id]` | Obtiene un autor por ID |
+| PUT | `/api/authors/[id]` | Actualiza un autor |
+| DELETE | `/api/authors/[id]` | Elimina un autor (y sus libros) |
+| GET | `/api/authors/[id]/books` | Lista los libros de un autor |
+| POST | `/api/authors/[id]/books` | Crea un libro para ese autor (`title` requerido) |
+| GET | `/api/authors/[id]/stats` | Estadísticas del autor (total libros, páginas, géneros, etc.) |
 
-To learn more about Next.js, take a look at the following resources:
+### Libros
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/api/books` | Lista todos los libros. Acepta `?genre=` para filtrar |
+| POST | `/api/books` | Crea un libro (`title` y `authorId` requeridos) |
+| GET | `/api/books/[bookId]` | Obtiene un libro por ID (incluye autor) |
+| PUT | `/api/books/[bookId]` | Actualiza un libro |
+| DELETE | `/api/books/[bookId]` | Elimina un libro |
+| GET | `/api/books/search` | Busca libros por título, género o autor |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Ejemplos de uso
 
-## Deploy on Vercel
+Crear un autor:
+```bash
+curl -X POST http://localhost:3000/api/authors \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Gabriel García Márquez", "email": "gabo@example.com", "nationality": "Colombiana", "birthYear": 1927}'
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Listar libros de un autor:
+```bash
+curl http://localhost:3000/api/authors/<id>/books
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Filtrar libros por género:
+```bash
+curl http://localhost:3000/api/books?genre=Realismo%20mágico
+```
